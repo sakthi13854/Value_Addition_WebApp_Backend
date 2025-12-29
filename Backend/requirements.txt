@@ -1,0 +1,7 @@
+Flask[asyncio]
+MySql
+sqlalchemy
+asyncmy
+cryptography
+asyncio
+
