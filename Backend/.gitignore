@@ -1,31 +1,22 @@
-
-
-# Ignore Python virtual environment
-.venv/
-
+# Python cache
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 .Python
 
-# Database files
-src/database.py
-database.py
+# Virtual environments
+venv/
+env/
+.venv/
+.python-version
 
-# SQLite databases (optional)
-*.db
-*.sqlite
-*.sqlite3
-
-# Environment variables
+# Environment variables / secrets
 .env
 .env.local
 
-# Virtual environment
-venv/
-env/
-.venv
-
+# Config (DO NOT COMMIT)
 Backend/config.py
-.python-version
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
