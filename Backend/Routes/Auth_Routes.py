@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from Backend.databases.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.Users_Schema import Consumers
+from Backend.models.Users_Schema import Consumers
 from sqlalchemy import select
 
 
