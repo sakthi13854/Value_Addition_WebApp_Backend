@@ -52,20 +52,22 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const response = await fetch("/signup", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: document.getElementById("username").value,
-            email: document.getElementById("email").value,
-            password: document.getElementById("password").value
-        })
-    });
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        name: username.value,
+        email: email.value,
+        password: password.value
+    })
+});
 
-    const data = await response.json();
-    document.getElementById("msg").innerText =
-        data.message || data.error;
+if (response.redirected) {
+    window.location.href = response.url;
+    return;
+}
+
+const data = await response.json();
+document.getElementById("msg").innerText = data.error;
 });
 </script>
 

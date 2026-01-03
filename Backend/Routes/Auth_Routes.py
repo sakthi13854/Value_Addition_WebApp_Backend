@@ -3,11 +3,12 @@ from Backend.databases.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.models.Users_Schema import Consumers
 from sqlalchemy import select
-
+from flask_jwt_extended import create_access_token
+from flask import redirect, url_for
 
 auth_bp = Blueprint("Auth",__name__)
 
-@auth_bp.get('/signup')
+@auth_bp.route('/signup')
 def signup_page():
     return render_template('signup.html')
 
@@ -18,14 +19,9 @@ def signup():
         if not data:
             data = request.form.to_dict()
 
-        username = (data.get("Username") or data.get("username") or "").strip()
+        username = (data.get("name") or data.get("Name") or "").strip()
         email = (data.get("Email") or data.get("email") or "").strip()
         password = (data.get("Password") or data.get("password") or "").strip()
-
-        print("RAW DATA:", data)
-        print("USERNAME:", username)
-        print("EMAIL:", email)
-        print("PASSWORD:", password)
 
         
         if not all([username, email, password]):
@@ -52,7 +48,7 @@ def signup():
             db.add(user)
             db.commit()
 
-            return jsonify({"success": "Consumer registered successfully"}), 201
+            return redirect(url_for("Auth.login_page",msg="registered"))
 
         finally:
             if db:
@@ -62,4 +58,52 @@ def signup():
         print("SIGNUP ERROR:", e)
         return jsonify({"error": "Internal server error"}), 500
 
+@auth_bp.get('/login')
+def login_page():
+    return render_template('login.html')
+
+@auth_bp.post("/login")
+def login():
+    try:
+        data = request.get_json(silent=True)
+        if not data:
+            data = request.form.to_dict()
+
+        email = (data.get("Email") or data.get("email") or "").strip()
+        password = (data.get("Password") or data.get("password") or "").strip()
+
+        db = get_db()
+        result = db.execute(
+            select(Consumers).where(
+                    Consumers.Email == email ,
+                    Consumers.Password == password
+                )
+        )   
+        user =result.scalar_one_or_none()
+
+        if not user:
+            return render_template(
+                'login.html',
+                error = 'Invalid credentials'
+            )  
+        token = create_access_token(identity = str(user.Id))
+        response = redirect(url_for("dashboard"))
+        response.set_cookie("access_token_cookie", token, httponly=True)
+        return response
+
+
+    except Exception as e:
+        print("LOGIN ERROR:", e)
+        return jsonify({"error": "Internal server error"}), 500
+
+
+    finally:
+        if db:
+            db.close()
+
+@auth_bp.post('/logout')
+def logout():
+    response = redirect("/login")
+    response.delete_cookie('access_token_cookie')
+    return response
 

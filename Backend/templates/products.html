@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+        }
+
+        form, table {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        form {
+            width: 400px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .edit { background: #3498db; color: white; border: none; }
+        .delete { background: #e74c3c; color: white; border: none; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #2c3e50;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Add / Edit Product</h2>
+
+<form id="productForm">
+    <!-- hidden field for edit -->
+    <input type="hidden" id="productId">
+
+    <input type="text" id="name" placeholder="Product Name" required>
+    <input type="text" id="description" placeholder="Description">
+    <input type="text" id="price" placeholder="Price" required>
+
+    <select id="category" required>
+        <option value="">Select Category</option>
+        <option value="Millets">Millets</option>
+        <option value="Textiles">Textiles</option>
+        <option value="Fishes">Fishes</option>
+    </select>
+
+    <select id="status">
+        <option value="">Select Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+    </select>
+
+    <button type="submit">Save Product</button>
+</form>
+
+<h2>My Products</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="productTable"></tbody>
+</table>
+
+<script>
+let editingId = null;
+
+// 🔹 Load products
+function loadProducts() {
+    fetch("/Products/list", { credentials: "include" })
+        .then(res => res.json())
+        .then(products => {
+            const table = document.getElementById("productTable");
+            table.innerHTML = "";
+
+            products.forEach(p => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td>${p.description || "-"}</td>
+                        <td>${p.category}</td>
+                        <td>${p.price}</td>
+                        <td>${p.status}</td>
+                        <td>
+                            <button class="edit" onclick="startEdit(${p.id}, '${p.name}', '${p.description}', '${p.price}', '${p.category}', '${p.status}')">Edit</button>
+                            <button class="delete" onclick="deleteProduct(${p.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+}
+
+// 🔹 Add / Edit submit
+document.getElementById("productForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const data = {
+        Name: document.getElementById("name").value,
+        Description: document.getElementById("description").value,
+        Price: document.getElementById("price").value,
+        Category: document.getElementById("category").value,
+        Status: document.getElementById("status").value
+    };
+
+    const url = editingId ? `/Products/edit/${editingId}` : "/Products/add";
+    const method = editingId ? "PUT" : "POST";
+
+    fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include"
+    })
+    .then(res => res.json())
+    .then(() => {
+        resetForm();
+        loadProducts();
+    });
+});
+
+// 🔹 Start editing
+function startEdit(id, name, description, price, category, status) {
+    editingId = id;
+    document.getElementById("name").value = name;
+    document.getElementById("description").value = description || "";
+    document.getElementById("price").value = price;
+    document.getElementById("category").value = category;
+    document.getElementById("status").value = status;
+}
+
+// 🔹 Delete product
+function deleteProduct(id) {
+    if (!confirm("Delete this product?")) return;
+
+    fetch(`/Products/delete/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    })
+    .then(res => res.json())
+    .then(() => loadProducts());
+}
+
+// 🔹 Reset form
+function resetForm() {
+    editingId = null;
+    document.getElementById("productForm").reset();
+}
+
+// initial load
+loadProducts();
+</script>
+
+</body>
+</html>

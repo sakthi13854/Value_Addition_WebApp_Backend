@@ -1,10 +1,11 @@
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from Backend.databases.db import Base
 from sqlalchemy.sql import func
 
 class Products(Base):
     __tablename__ = 'products'
     Id = Column(Integer,primary_key= True, index = True)
+    UserId = Column(Integer, ForeignKey('Consumers.Id'))
     Name = Column(String(200),nullable = False)
     Description = Column(String(500),nullable = True)
     Category = Column(Integer,nullable = False)
